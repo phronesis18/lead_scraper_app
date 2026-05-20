@@ -1,0 +1,19 @@
+# Environnement virtuel
+.venv/
+venv/
+ENV/
+
+# Secrets
+.streamlit/secrets.toml
+
+# Fichiers Python compilés
+__pycache__/
+*.pyc
+
+# Fichiers d’export (si vous en générez)
+*.csv
+*.xlsx
+
+# Fichiers locaux
+.env
+.DS_Store
