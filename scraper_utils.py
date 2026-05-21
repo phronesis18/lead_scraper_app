@@ -1,4 +1,3 @@
-import std_requests as std_requests
 import re
 import time
 from typing import List, Dict, Set
@@ -50,7 +49,6 @@ def scrape_page_contacts(url: str, timeout: int = 15) -> Dict:
         result["phones"].update(extract_phones(text))
         
     except curl_requests.exceptions.RequestException as e:
-        # curl_cffi lance ses propres exceptions, mais on peut aussi capturer std_requests
         result["error"] = f"HTTP error: {str(e)}"
     except Exception as e:
         result["error"] = f"Parsing error: {str(e)}"
