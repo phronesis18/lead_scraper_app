@@ -129,23 +129,21 @@ def find_emails_by_domain(domain: str) -> list:
         "x-rapidapi-host": "email-finder7.p.rapidapi.com",
         "Content-Type": "application/json"
     }
-    params = {"chaine": domain}   # paramètre probable
+    params = {"domaine": domain}   # paramètre correct
     try:
         response = http_requests.get(url, headers=headers, params=params, timeout=10)
         if response.status_code == 200:
             data = response.json()
-            # Affiche la réponse pour voir sa structure (à enlever ensuite)
-            print("Structure de la réponse :", data)
-            # Tentative d'extraction (à ajuster selon la structure réelle)
-            if isinstance(data, list):
-                return data
-            if isinstance(data, dict):
-                if "emails" in data:
-                    return data["emails"]
-                if "data" in data and isinstance(data["data"], list):
-                    return data["data"]
-                if "results" in data and isinstance(data["results"], list):
-                    return data["results"]
+            # Extraction selon la structure observée
+            if data.get("error") is None and "payload" in data:
+                payload = data["payload"]
+                if "data" in payload and isinstance(payload["data"], list):
+                    emails = []
+                    for item in payload["data"]:
+                        if "address" in item:
+                            emails.append(item["address"])
+                    return emails
+            print("Structure inattendue :", data)
             return []
         else:
             print(f"Erreur HTTP {response.status_code}: {response.text}")
