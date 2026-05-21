@@ -1,4 +1,3 @@
-import requests
 import re
 import time
 from typing import List, Dict, Set
@@ -50,7 +49,6 @@ def scrape_page_contacts(url: str, timeout: int = 15) -> Dict:
         result["phones"].update(extract_phones(text))
         
     except requests.exceptions.RequestException as e:
-        # curl_cffi utilise bien cette exception, mais l'import est correct
         result["error"] = f"HTTP error: {str(e)}"
     except Exception as e:
         result["error"] = f"Parsing error: {str(e)}"
