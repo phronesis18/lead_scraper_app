@@ -1,3 +1,4 @@
+import requests
 import re
 import time
 from typing import List, Dict, Set
