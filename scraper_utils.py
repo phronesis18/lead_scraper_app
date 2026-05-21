@@ -1,10 +1,17 @@
 import re
 import time
 from typing import List, Dict, Set
-from curl_cffi import requests as curl_requests
 from bs4 import BeautifulSoup
 from urllib.parse import urljoin
 from googlesearch import search
+
+# Tentative d'import de curl_cffi, sinon fallback sur requests standard
+try:
+    from curl_cffi import requests as http_requests
+    USE_CURL = True
+except ImportError:
+    import requests as http_requests
+    USE_CURL = False
 
 # Regex pour emails (standard + formes avec [at])
 EMAIL_STANDARD = r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b'
@@ -25,8 +32,10 @@ def extract_phones(text: str) -> Set[str]:
 def scrape_page_contacts(url: str, timeout: int = 15) -> Dict:
     result = {"url": url, "emails": set(), "phones": set(), "error": None}
     try:
-        # Utilisation de curl_cffi avec impersonation Chrome
-        response = curl_requests.get(url, timeout=timeout, impersonate="chrome110")
+        if USE_CURL:
+            response = http_requests.get(url, timeout=timeout, impersonate="chrome110")
+        else:
+            response = http_requests.get(url, timeout=timeout)
         response.raise_for_status()
         soup = BeautifulSoup(response.text, "html.parser")
         
@@ -48,17 +57,18 @@ def scrape_page_contacts(url: str, timeout: int = 15) -> Dict:
         result["emails"].update(extract_emails_from_text(text))
         result["phones"].update(extract_phones(text))
         
-    except curl_requests.exceptions.RequestException as e:
-        result["error"] = f"HTTP error: {str(e)}"
     except Exception as e:
-        result["error"] = f"Parsing error: {str(e)}"
+        result["error"] = f"Request or parsing error: {str(e)}"
     return result
 
 def scrape_team_contact_urls(base_url: str, max_pages: int = 5) -> List[str]:
     keywords = ["equipe", "team", "contact", "about", "nous-contacter", "lequipe", "annuaire"]
     found_urls = set([base_url])
     try:
-        response = curl_requests.get(base_url, timeout=10, impersonate="chrome110")
+        if USE_CURL:
+            response = http_requests.get(base_url, timeout=10, impersonate="chrome110")
+        else:
+            response = http_requests.get(base_url, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
         for link in soup.find_all("a", href=True):
             href = link["href"]
@@ -95,7 +105,10 @@ def google_dorking_for_profiles(query: str, num_results: int = 20) -> List[Dict]
 def enrich_profil_with_scraping(profile_url: str) -> Dict:
     result = {"url": profile_url, "emails": set(), "phones": set()}
     try:
-        response = curl_requests.get(profile_url, timeout=10, impersonate="chrome110")
+        if USE_CURL:
+            response = http_requests.get(profile_url, timeout=10, impersonate="chrome110")
+        else:
+            response = http_requests.get(profile_url, timeout=10)
         soup = BeautifulSoup(response.text, "html.parser")
         for link in soup.find_all("a", href=True):
             if link["href"].startswith("mailto:"):
