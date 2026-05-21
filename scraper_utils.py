@@ -151,3 +151,5 @@ def find_emails_by_domain(domain: str) -> list:
     except Exception as e:
         print(f"Exception: {e}")
         return []
+    
+    
